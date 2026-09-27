@@ -1,3 +1,10 @@
+from datetime import datetime, timedelta
+import calendar
+
+
+user_progress_data = {}
+
+
 class UserProgress:
     def __init__(self, user_id):
         self.user_id = user_id
@@ -8,6 +15,9 @@ class UserProgress:
     def mark_done(self, date, time_taken):
         self.daily_completions[date] = True
         self.times_taken[date] = time_taken
+
+    def mark_completion(self, date, time_taken):
+        self.mark_done(date, time_taken)
 
     def track_completion(self, date):
         if date not in self.daily_completions:
@@ -23,3 +33,20 @@ class UserProgress:
 
     def get_completion_count(self):
         return len(self.daily_completions)
+
+    def get_missed_days_in_current_month(self):
+        today = datetime.now().date()
+        year = today.year
+        month = today.month
+        first_day = datetime(year, month, 1).date()
+        last_day = today
+
+        missed = 0
+        current_day = first_day
+
+        while current_day <= last_day:
+            if current_day not in self.daily_completions:
+                missed += 1
+            current_day += timedelta(days=1)
+
+        return missed

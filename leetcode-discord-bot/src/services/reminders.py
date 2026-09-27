@@ -1,18 +1,33 @@
-from datetime import datetime, timedelta
-import discord
+import os
+from datetime import datetime
+
 from discord.ext import tasks
 
-reminder_channel_id = YOUR_CHANNEL_ID  # Replace with your channel ID
-reminder_time = "09:00"  # Time to send reminders
+from ..models.user_progress import user_progress_data
 
-@tasks.loop(hours=24)
-async def set_reminders():
-    now = datetime.now()
-    if now.strftime("%H:%M") == reminder_time:
-        channel = discord.utils.get(discord.Client.get_all_channels(), id=reminder_channel_id)
-        if channel:
-            await channel.send("Don't forget to mark your LeetCode daily challenge as done!")
 
-@set_reminders.before_loop
-async def before_set_reminders():
-    await discord.Client.wait_until_ready()
+class MonthlyMissTracker:
+    def __init__(self, bot):
+        self.bot = bot
+
+    @tasks.loop(minutes=1)
+    async def check(self):
+        channel_id = os.getenv("ANNOUNCEMENT_CHANNEL_ID")
+        if not channel_id:
+            return
+
+        channel = self.bot.get_channel(int(channel_id))
+        if channel is None:
+            return
+
+        for user_id, progress in list(user_progress_data.items()):
+            missed_days = progress.get_missed_days_in_current_month()
+            if missed_days > 5:
+                await channel.send(
+                    f"<@{user_id}> has missed {missed_days} LeetCode days this month. "
+                    "Please mark your daily challenge as done soon."
+                )
+
+    @check.before_loop
+    async def before_check(self):
+        await self.bot.wait_until_ready()
