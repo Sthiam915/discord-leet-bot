@@ -1,0 +1,21 @@
+import sqlite3
+
+# Connect to the SQLite database (it will be created if it doesn't exist)
+conn = sqlite3.connect('database/sqlite.db')
+
+# Create a cursor object
+cursor = conn.cursor()
+
+# Create a table for user progress
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS user_progress (
+    user_id TEXT PRIMARY KEY,
+    daily_completions INTEGER DEFAULT 0,
+    total_time INTEGER DEFAULT 0,
+    missed_days INTEGER DEFAULT 0
+)
+''')
+
+# Commit the changes and close the connection
+conn.commit()
+conn.close()
