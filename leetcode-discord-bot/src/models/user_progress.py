@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-import calendar
+
+from ..utils.date_utils import get_utc_date
 
 
 user_progress_data = {}
@@ -10,6 +11,7 @@ class UserProgress:
         self.user_id = user_id
         self.daily_completions = {}
         self.times_taken = {}
+        self.leetcode_completions = []
         self.missed_days = 0
 
     def mark_done(self, date, time_taken):
@@ -18,6 +20,13 @@ class UserProgress:
 
     def mark_completion(self, date, time_taken):
         self.mark_done(date, time_taken)
+
+    def mark_problem_done(self, date, problem_number, time_taken):
+        self.leetcode_completions.append((date, problem_number, time_taken))
+
+    def mark_read(self, date, problem_number, time_taken):
+        self.daily_completions[date] = True
+        self.mark_problem_done(date, problem_number, time_taken)
 
     def track_completion(self, date):
         if date not in self.daily_completions:
@@ -35,11 +44,11 @@ class UserProgress:
         return len(self.daily_completions)
 
     def get_missed_days_in_current_month(self):
-        today = datetime.now().date()
+        today = get_utc_date()
         year = today.year
         month = today.month
         first_day = datetime(year, month, 1).date()
-        last_day = today
+        last_day = today - timedelta(days=1)
 
         missed = 0
         current_day = first_day

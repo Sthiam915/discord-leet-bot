@@ -1,8 +1,7 @@
-from datetime import datetime
-
 from discord.ext import commands
 
 from ..models.user_progress import UserProgress, user_progress_data
+from ..utils.date_utils import get_utc_date
 
 
 def parse_time_input(value):
@@ -12,7 +11,7 @@ def parse_time_input(value):
         minutes = int(minutes_str)
         seconds = int(seconds_str)
 
-        if minutes < 0 or seconds < 0 or hours < 0:
+        if hours < 0 or not 0 <= minutes < 60 or not 0 <= seconds < 60:
             raise ValueError
 
         total_seconds = (hours * 60 * 60) + (minutes * 60) + seconds
@@ -22,21 +21,63 @@ def parse_time_input(value):
 
 
 @commands.command(name="mark_done")
-async def mark_done(ctx, time_taken: str):
-    user_id = ctx.author.id
-    if user_id not in user_progress_data:
-        user_progress_data[user_id] = UserProgress(user_id)
-
+async def mark_done(ctx, time_taken: str, problem: str):
     try:
         total_minutes = parse_time_input(time_taken)
     except ValueError as exc:
         await ctx.send(f"{ctx.author.mention}, {exc}")
         return
 
+    problem = problem.strip().lower()
+    is_daily = problem == "daily"
+    if not is_daily and (not problem.isdecimal() or int(problem) <= 0):
+        await ctx.send(
+            f"{ctx.author.mention}, specify `daily` or a positive LeetCode problem number."
+        )
+        return
+
+    user_id = ctx.author.id
+    if user_id not in user_progress_data:
+        user_progress_data[user_id] = UserProgress(user_id)
+
     user_progress = user_progress_data[user_id]
-    user_progress.mark_done(datetime.now().date(), total_minutes)
+    today = get_utc_date()
+    if is_daily:
+        user_progress.mark_done(today, total_minutes)
+        await ctx.send(
+            f"{ctx.author.mention}, your daily challenge is marked done in {time_taken}."
+        )
+    else:
+        problem_number = int(problem)
+        user_progress.mark_problem_done(today, problem_number, total_minutes)
+        await ctx.send(
+            f"{ctx.author.mention}, LeetCode problem #{problem_number} is marked done in {time_taken}. "
+            "Only daily completion times count toward the daily average."
+        )
+
+
+@commands.command(name="mark_read")
+async def mark_read(ctx, time_taken: str, problem: str):
+    try:
+        total_minutes = parse_time_input(time_taken)
+    except ValueError as exc:
+        await ctx.send(f"{ctx.author.mention}, {exc}")
+        return
+
+    if not problem.isdecimal() or int(problem) <= 0:
+        await ctx.send(f"{ctx.author.mention}, provide a positive LeetCode problem number.")
+        return
+
+    user_id = ctx.author.id
+    if user_id not in user_progress_data:
+        user_progress_data[user_id] = UserProgress(user_id)
+
+    user_progress_data[user_id].mark_read(
+        get_utc_date(), int(problem), total_minutes
+    )
     await ctx.send(
-        f"{ctx.author.mention}, your LeetCode daily challenge has been marked as done in {total_minutes:.2f} minutes."
+        f"{ctx.author.mention}, LeetCode problem #{int(problem)} is marked done in {time_taken}. "
+        "This counts as a daily completion but is excluded from your average time."
     )
 
 

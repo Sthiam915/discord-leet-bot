@@ -1,4 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+
+def get_utc_date():
+    return datetime.now(timezone.utc).date()
 
 def is_day_missed(date, completed_dates):
     return date not in completed_dates
