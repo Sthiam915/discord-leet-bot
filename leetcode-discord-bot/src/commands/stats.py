@@ -1,14 +1,13 @@
-from datetime import datetime
-
 from discord.ext import commands
 
 from ..models.user_progress import UserProgress, user_progress_data
+from ..utils.date_utils import get_utc_date
 
 
 @commands.command(name="track_completions")
 async def track_completions(ctx):
     user_id = ctx.author.id
-    today = datetime.now().date()
+    today = get_utc_date()
     if user_id not in user_progress_data:
         user_progress_data[user_id] = UserProgress(user_id)
 
