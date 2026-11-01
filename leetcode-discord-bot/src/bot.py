@@ -5,8 +5,9 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from .commands.daily import mark_done, mark_read
+from .commands.daily import mark_done
 from .commands.stats import announce_stats, track_completions
+from .services.reminders import MonthlyMissTracker
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -17,6 +18,10 @@ class LeetCodeBot(commands.Bot):
         if intents is None:
             intents = discord.Intents.default()
         super().__init__(command_prefix=command_prefix, intents=intents)
+        self.monthly_miss_tracker = MonthlyMissTracker(self)
+
+    async def setup_hook(self):
+        self.monthly_miss_tracker.check.start()
 
     async def on_ready(self):
         print(f"Logged in as {self.user.name} - {self.user.id}")
@@ -24,7 +29,6 @@ class LeetCodeBot(commands.Bot):
 
     def setup_commands(self):
         self.add_command(mark_done)
-        self.add_command(mark_read)
         self.add_command(track_completions)
         self.add_command(announce_stats)
 
