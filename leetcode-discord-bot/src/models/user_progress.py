@@ -22,11 +22,8 @@ class UserProgress:
         self.mark_done(date, time_taken)
 
     def mark_problem_done(self, date, problem_number, time_taken):
-        self.leetcode_completions.append((date, problem_number, time_taken))
-
-    def mark_read(self, date, problem_number, time_taken):
         self.daily_completions[date] = True
-        self.mark_problem_done(date, problem_number, time_taken)
+        self.leetcode_completions.append((date, problem_number, time_taken))
 
     def track_completion(self, date):
         if date not in self.daily_completions:

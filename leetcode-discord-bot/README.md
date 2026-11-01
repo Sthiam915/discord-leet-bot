@@ -6,7 +6,7 @@ This project is a Discord bot designed to help users track their LeetCode daily 
 
 - Mark LeetCode daily challenges as done and record the time taken.
 - Track daily completions for the month.
-- Announce the number of days missed in the past 5 days.
+- Announce in each server's `#punishment` channel when a member exceeds 6 missed days in the month, then again for each additional missed day.
 - Calculate and announce average completion times for each member enrolled in the server.
 
 ## Project Structure
@@ -65,8 +65,10 @@ leetcode-discord-bot
    python main.py
    ```
 2. Use the commands to interact with the bot:
-   - Mark a daily challenge as done.
+   - Mark a daily challenge as done with `!mark_done H:M:S daily`.
+   - Mark a numbered problem as done with `!mark_done H:M:S <problem-number>`. This counts toward that day's completion streak, but its time is excluded from the daily average.
    - Check your progress and statistics.
+   - Create a text channel named `#punishment` to receive missed-day announcements.
 
 ## Contributing
 
